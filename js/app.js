@@ -5,7 +5,8 @@ var session;
 var sessionId;
 var token;
 var archiveID;
-
+var resolutionValue;
+var subscriberTest;
 $(document).ready(function ready() {
   $('#stop').hide();
   archiveID = null;
@@ -20,15 +21,16 @@ function handleError(error) {
 
 function initializeSession() {
    session = OT.initSession(apiKey, sessionId);
-
+   resolution=
   // Subscribe to a newly created stream
   session.on('streamCreated', function streamCreated(event) {
     var subscriberOptions = {
       insertMode: 'append',
       width: '100%',
-      height: '100%'
+      height: '100%',
+      preferredResolution: { width : 1280,height:720}
     };
-    session.subscribe(event.stream, 'subscriber', subscriberOptions, handleError);
+    subscriberTest= session.subscribe(event.stream, 'subscriber', subscriberOptions, handleError);
   });
   session.on('archiveStarted', function archiveStarted(event) {
     archiveID = event.id;
@@ -49,10 +51,11 @@ function initializeSession() {
   });
 
   // initialize the publisher
+  
   var publisherOptions = {
     insertMode: 'append',
     width: '100%',
-    height: '100%'
+    height: '100%',
   };
   var publisher = OT.initPublisher('publisher', publisherOptions, handleError);
 
@@ -159,6 +162,44 @@ function stopArchive() { // eslint-disable-line no-unused-vars
   $('#stop').hide();
   $('#view').prop('disabled', false);
   $('#stop').show();
+  $('#modifyresolution').show();
+} 
+
+function captureScreen() {
+
+ var imgData = subscriberTest.getImgData();
+ var img = document.createElement("img");
+ img.setAttribute("src", "data:image/png;base64," + imgData);
+ var imgWin = window.open("about:blank","Screenshot");
+ imgWin.document.write("<body></body>");
+ imgWin.document.body.appendChild(img);
+
+
+}
+function modifyResolution()
+{
+  
+  var e = document.getElementById("modifyresolution");
+  resolutionValue = e.options[e.selectedIndex].value;
+  var resolutionObj= {width:1280 , height: 720}
+  if(resolutionValue == 1)
+  {
+    resolutionObj.width=1280;
+    resolutionObj.height=720;
+  }
+  else if(resolutionValue==2)
+  {
+    resolutionObj.width=640;
+    resolutionObj.height=480;
+  }
+  else
+  {
+    resolutionObj.width=320;
+    resolutionObj.height=240;
+  }
+  console.log(resolutionObj);
+  subscriberTest.setPreferredResolution(resolutionObj);
+
 }
 
 // Get the archive status. If it is  "available", download it. Otherwise, keep checking
